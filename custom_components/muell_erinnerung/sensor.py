@@ -1,7 +1,8 @@
 """Sensor platform."""
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
-from .const import CONF_ICON
+from .const import CONF_ICON, DOMAIN, VERSION
 from .coordinator import MuellConfigEntry, MuellCoordinator
 from .entity import MuellEntity
 from .pickup import slugify_name
@@ -17,11 +18,22 @@ async def async_setup_entry(hass, entry: MuellConfigEntry, async_add_entities):
 class WasteTypeSensor(MuellEntity, SensorEntity):
     """Nächste Abholung eines Mülltyps, z. B. sensor.muellerinnerung_biomuell."""
 
+    # Name kommt vom Gerät des Mülltyps, z. B. "Biomüll".
+    _attr_name = None
+
     def __init__(self, coordinator: MuellCoordinator, subentry_id: str, waste_type: dict):
         super().__init__(coordinator, "sensor", slugify_name(waste_type["name"]), subentry_id)
         self._subentry_id = subentry_id
-        self._attr_name = waste_type["name"]
         self._attr_icon = waste_type[CONF_ICON]
+        # Ein Gerät gehört genau einem Subentry: jeder Mülltyp bekommt ein eigenes
+        # Gerät, das am Hauptgerät "Müllerinnerung" hängt.
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, subentry_id)},
+            name=waste_type["name"],
+            entry_type=DeviceEntryType.SERVICE,
+            sw_version=VERSION,
+            via_device=(DOMAIN, coordinator.config_entry.entry_id),
+        )
 
     @property
     def native_value(self):

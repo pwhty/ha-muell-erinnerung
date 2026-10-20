@@ -3,10 +3,11 @@ from datetime import date, datetime, timedelta
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
-from custom_components.muell_erinnerung.const import CONF_ICON, CONF_PATTERN, SUBENTRY_TYPE
+from custom_components.muell_erinnerung.const import CONF_ICON, CONF_PATTERN, DOMAIN, SUBENTRY_TYPE
 
 
 def _local(*args) -> datetime:
@@ -112,3 +113,38 @@ async def test_missing_calendar_retries(hass, config_entry):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state.name == "SETUP_RETRY"
+
+
+async def test_each_device_belongs_to_one_subentry(hass, setup_integration):
+    entry = setup_integration
+    devices = dr.async_get(hass)
+    entities = er.async_get(hass)
+    main = devices.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert main.config_entries_subentries == {entry.entry_id: {None}}
+    for entity_id in ("sensor.muellerinnerung_naechste_abholung", "binary_sensor.muellerinnerung_aktiv", "button.muellerinnerung_spaeter"):
+        assert entities.async_get(entity_id).device_id == main.id
+    for subentry_id, subentry in entry.subentries.items():
+        device = devices.async_get_device(identifiers={(DOMAIN, subentry_id)})
+        assert device.name == subentry.title
+        assert device.via_device_id == main.id
+        assert device.config_entries_subentries == {entry.entry_id: {subentry_id}}
+    bio = hass.states.get("sensor.muellerinnerung_biomuell")
+    assert bio.attributes["friendly_name"] == "Biomüll"
+
+
+async def test_main_device_moved_back_from_subentry(hass, calendar, config_entry, notify_calls):
+    """Zustand von 0.3.0: Hauptgerät steckt in einem Mülltyp-Subentry."""
+    config_entry.add_to_hass(hass)
+    subentry_id = next(iter(config_entry.subentries))
+    devices = dr.async_get(hass)
+    old = devices.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id=subentry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        name="Müllerinnerung",
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    main = devices.async_get_device(identifiers={(DOMAIN, config_entry.entry_id)})
+    assert main.id == old.id
+    assert main.config_entries_subentries == {config_entry.entry_id: {None}}

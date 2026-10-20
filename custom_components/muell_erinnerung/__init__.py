@@ -5,9 +5,10 @@ from pathlib import Path
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import CARD_URL, PLATFORMS, VERSION
+from .const import CARD_URL, DOMAIN, PLATFORMS, VERSION
 from .coordinator import MuellConfigEntry, MuellCoordinator
 
 
@@ -22,6 +23,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MuellConfigEntry) -> bool:
+    _async_detach_main_device_from_subentries(hass, entry)
     coordinator = MuellCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     await coordinator.async_setup()
@@ -30,6 +32,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: MuellConfigEntry) -> boo
     # Änderungen an Optionen oder Mülltypen (Subentries) laden die Integration neu.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
+
+
+@callback
+def _async_detach_main_device_from_subentries(hass: HomeAssistant, entry: MuellConfigEntry) -> None:
+    """Hauptgerät zurück in den Haupteintrag holen.
+
+    Bis 0.3.0 hingen auch die Mülltyp-Sensoren am Hauptgerät; HA hat das Gerät
+    dadurch in einen Mülltyp-Subentry verschoben.
+    """
+    registry = dr.async_get(hass)
+    device = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if device is None:
+        return
+    subentry_ids = device.config_entries_subentries.get(entry.entry_id, set()) - {None}
+    if not subentry_ids:
+        return
+    registry.async_update_device(device.id, add_config_entry_id=entry.entry_id, add_config_subentry_id=None)
+    for subentry_id in subentry_ids:
+        registry.async_update_device(device.id, remove_config_entry_id=entry.entry_id, remove_config_subentry_id=subentry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MuellConfigEntry) -> bool:

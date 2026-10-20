@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 DOMAIN = "muell_erinnerung"
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 PLATFORMS = ["sensor", "binary_sensor", "button"]
 
 CONF_CALENDAR = "calendar_entity"

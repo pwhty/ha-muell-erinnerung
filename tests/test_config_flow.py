@@ -43,7 +43,10 @@ async def test_subentry_flow_add_and_reconfigure(hass, setup_integration):
     assert hass.states.get("sensor.muellerinnerung_sperrmuell")
 
     subentry = next(s for s in entry.subentries.values() if s.title == "Biomüll")
-    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE),
+        context={"source": config_entries.SOURCE_RECONFIGURE, "subentry_id": subentry.subentry_id},
+    )
     assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {"name": "Biomüll", "pattern": "bio|kompost"})
     assert result["type"] is FlowResultType.ABORT
