@@ -1,0 +1,101 @@
+# Übersicht der Mülltypen mit Bubble Card (benötigt Bubble Card via HACS).
+#
+# Vier einzelne Karten (durch --- getrennt) für eine Sections-Ansicht:
+# jede Karte einzeln über Karte hinzufügen → Manuell einfügen.
+# Mit grid_options.columns: 6 stehen jeweils zwei Karten nebeneinander.
+#
+# Jeder Mülltyp der Integration hat einen Sensor sensor.muellerinnerung_<name>:
+#   state        Tage bis zur Abholung (unknown, wenn kein Termin gefunden)
+#   anzahl_tage  wie state
+#   anzeige      "Heute", "Morgen", "In 5 Tagen" oder "unbekannt"
+#   date         Datum der nächsten Abholung (YYYY-MM-DD)
+#
+# Die Entity-ID entsteht aus dem Namen des Mülltyps in der Integration (Umlaute
+# werden ersetzt): Biomüll -> sensor.muellerinnerung_biomuell. Der Name auf der
+# Karte (name:) ist davon unabhängig.
+#
+# Die Karte wird kräftiger eingefärbt, wenn die Abholung in höchstens 2 Tagen
+# ist. Ohne Termin (state "unknown") bleibt sie hell.
+type: custom:bubble-card
+card_type: button
+button_type: state
+entity: sensor.muellerinnerung_biomuell
+name: Biomüll
+icon: mdi:leaf
+state_content: anzeige
+min_value: 0
+max_value: 28
+grid_options:
+  columns: 6
+  rows: auto
+styles: |-
+  .bubble-background {
+    background-color: ${state <= 2 ? '#81c784' : '#C8E6C9'}
+  }
+
+  .bubble-icon-container {
+    background: transparent !important;
+  }
+---
+type: custom:bubble-card
+card_type: button
+button_type: state
+entity: sensor.muellerinnerung_restmuell
+name: Restmüll
+icon: mdi:trash-can-outline
+state_content: anzeige
+min_value: 0
+max_value: 28
+grid_options:
+  columns: 6
+  rows: auto
+styles: |-
+  .bubble-background {
+    background-color: ${state <= 2 ? '#9e9e9e' : '#D6D9E0'}
+  }
+
+  .bubble-icon-container {
+    background: transparent !important;
+  }
+---
+type: custom:bubble-card
+card_type: button
+button_type: state
+entity: sensor.muellerinnerung_papiermuell
+name: Altpapier
+icon: mdi:newspaper
+state_content: anzeige
+min_value: 0
+max_value: 28
+grid_options:
+  columns: 6
+  rows: auto
+styles: |-
+  .bubble-background {
+    background-color: ${state <= 2 ? '#303f9f' : '#3f51b5'}
+  }
+
+  .bubble-icon-container {
+    background: transparent !important;
+  }
+---
+type: custom:bubble-card
+card_type: button
+button_type: state
+entity: sensor.muellerinnerung_gelber_sack
+name: Gelber Sack
+icon: mdi:sack-outline
+state_content: anzeige
+min_value: 0
+max_value: 28
+grid_options:
+  columns: 6
+  rows: auto
+styles: |-
+  .bubble-background {
+    background-color: ${state <= 2 ? '#ffd54f' : '#FFF0B3'}
+  }
+
+  .bubble-icon-container {
+    background: transparent !important;
+  }

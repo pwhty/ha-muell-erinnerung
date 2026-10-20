@@ -1,28 +1,22 @@
 """Gemeinsame Basis für alle Müll-Erinnerung-Entitäten."""
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_NAME, DOMAIN, ENTITY_PREFIX, VERSION
+from .coordinator import MuellCoordinator
 
 
-class MuellEntity(Entity):
+class MuellEntity(CoordinatorEntity[MuellCoordinator]):
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
-    def __init__(self, entry, runtime, platform, key):
-        self.runtime = runtime
-        self._attr_unique_id = f"{DOMAIN}_{key}"
+    def __init__(self, coordinator: MuellCoordinator, platform: str, key: str, unique_key: str | None = None):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_{unique_key or key}"
         # Feste Entity-ID, unabhängig von Name/Umlauten: <plattform>.muellerinnerung_<key>
         self.entity_id = f"{platform}.{ENTITY_PREFIX}_{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=DEVICE_NAME,
             entry_type=DeviceEntryType.SERVICE,
             sw_version=VERSION,
-        )
-
-    async def async_added_to_hass(self):
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, self.runtime["signal"], self.async_write_ha_state)
         )

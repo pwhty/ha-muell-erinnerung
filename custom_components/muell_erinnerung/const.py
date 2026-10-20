@@ -1,34 +1,40 @@
+from datetime import timedelta
+
 DOMAIN = "muell_erinnerung"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 PLATFORMS = ["sensor", "binary_sensor", "button"]
-CONF_ITEMS = "items"
+
+CONF_CALENDAR = "calendar_entity"
+CONF_LOOKAHEAD = "lookahead_days"
+CONF_CREATE_DEFAULTS = "create_default_types"
 CONF_TIME = "reminder_time"
 CONF_SNOOZE = "snooze_minutes"
 CONF_NOTIFY = "notify_service"
 CONF_DASHBOARD_URL = "dashboard_url"
+CONF_PATTERN = "pattern"
+CONF_ICON = "icon"
+
+DEFAULT_LOOKAHEAD = 60
 DEFAULT_TIME = "19:00:00"
 DEFAULT_SNOOZE = 15
-DEFAULT_ATTR = "anzahl_tage"
-DEFAULT_VALUE = "1"
 DEFAULT_DASHBOARD_URL = "/lovelace/0"
-DEFAULT_ITEMS = [
-    {"label": "Papier", "entity_id": "sensor.nachster_papier", "attribute": DEFAULT_ATTR, "value": DEFAULT_VALUE},
-    {"label": "Biomüll", "entity_id": "sensor.nachster_biomull", "attribute": DEFAULT_ATTR, "value": DEFAULT_VALUE},
-    {"label": "Restmüll", "entity_id": "sensor.nachster_restmull", "attribute": DEFAULT_ATTR, "value": DEFAULT_VALUE},
-    {"label": "Gelber Sack", "entity_id": "sensor.nachster_gelber_sack", "attribute": DEFAULT_ATTR, "value": DEFAULT_VALUE},
+DEFAULT_ICON = "mdi:trash-can"
+UPDATE_INTERVAL = timedelta(hours=1)
+
+# Mülltypen sind Untereinträge (Subentries) des Config Entries.
+SUBENTRY_TYPE = "waste_type"
+DEFAULT_WASTE_TYPES = [
+    {"name": "Biomüll", CONF_PATTERN: "bio", CONF_ICON: "mdi:leaf"},
+    {"name": "Restmüll", CONF_PATTERN: "restmüll|restmuell|restabfall", CONF_ICON: "mdi:trash-can-outline"},
+    {"name": "Papiermüll", CONF_PATTERN: "altpapier", CONF_ICON: "mdi:newspaper"},
+    {"name": "Gelber Sack", CONF_PATTERN: "gelb", CONF_ICON: "mdi:sack-outline"},
 ]
+
 STORAGE_VERSION = 1
 STORAGE_KEY = f"{DOMAIN}_state"
 
 # Entity-IDs: <plattform>.muellerinnerung_<key>
 ENTITY_PREFIX = "muellerinnerung"
 DEVICE_NAME = "Müllerinnerung"
-ENTITY_KEYS = [
-    ("sensor", "naechste_abholung"),
-    ("binary_sensor", "aktiv"),
-    ("button", "spaeter"),
-    ("button", "erledigt"),
-    ("button", "testbenachrichtigung"),
-]
 
 CARD_URL = f"/{DOMAIN}/muell-erinnerung.js"

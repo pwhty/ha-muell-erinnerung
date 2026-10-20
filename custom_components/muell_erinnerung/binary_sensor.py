@@ -1,22 +1,23 @@
 """Binary sensor platform."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import DOMAIN
+from .coordinator import MuellConfigEntry, MuellCoordinator
 from .entity import MuellEntity
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    runtime = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MuellActiveSensor(entry, runtime)])
+async def async_setup_entry(hass, entry: MuellConfigEntry, async_add_entities):
+    async_add_entities([MuellActiveSensor(entry.runtime_data)])
 
 
 class MuellActiveSensor(MuellEntity, BinarySensorEntity):
+    """Trigger für das Erinnerungs-Popup."""
+
     _attr_name = "Aktiv"
     _attr_icon = "mdi:bell-alert"
 
-    def __init__(self, entry, runtime):
-        super().__init__(entry, runtime, "binary_sensor", "aktiv")
+    def __init__(self, coordinator: MuellCoordinator):
+        super().__init__(coordinator, "binary_sensor", "aktiv")
 
     @property
     def is_on(self):
-        return self.runtime.get("is_open", False)
+        return self.coordinator.is_open

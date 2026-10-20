@@ -1,68 +1,84 @@
 # Müll-Erinnerung für Home Assistant
 
-Eine HACS-kompatible Custom Integration für Müllabholungs-Erinnerungen mit konfigurierbaren Sensoren, einer Lovelace-Karte, Schlummern, Erledigt-Datum und optionalen Companion-App-Benachrichtigungen.
+Eine HACS-kompatible Custom Integration, die Abholtermine aus einem Abfallkalender liest, je Mülltyp einen Sensor bereitstellt und am Vorabend per Pop-up (und optional per Push) ans Rausstellen erinnert, mit „Später“ und „Erledigt“.
 
-> **Status:** erster funktionsfähiger Projektstand zur Erprobung. Vor produktivem Einsatz auf einer Testinstanz prüfen. Die Integration und eine eigene Lovelace-Karte sind enthalten; alternativ gibt es ein Bubble-Card-Pop-up als Beispiel.
+> **Status:** Projektstand zur Erprobung. Vor produktivem Einsatz auf einer Testinstanz prüfen. Benötigt Home Assistant ≥ 2025.4.
 
 ## Funktionen
 
-- Beliebig viele konfigurierbare Müllarten/Sensoren.
-- Sensorattribut standardmäßig `anzahl_tage`, erwarteter Wert standardmäßig `1`.
-- Erinnerung täglich zur konfigurierbaren Uhrzeit (Standard 19:00), sofern Abholung morgen ansteht.
+- Liest Termine aus einer beliebigen `calendar.*`-Entität (z. B. ICS-/CalDAV-Abfallkalender).
+- Mülltypen werden in der Oberfläche angelegt: Name + Suchmuster für den Termintitel. Je Mülltyp entsteht automatisch ein Sensor mit Tagen bis zur Abholung und einem Anzeigetext.
+- Erinnerung täglich zur konfigurierbaren Uhrzeit (Standard 19:00), sofern morgen etwas abgeholt wird.
 - „Später“ schließt die Erinnerung und zeigt sie nach konfigurierbaren Minuten erneut.
-- „Erledigt“ speichert nur das zuletzt erledigte Datum und unterdrückt weitere Erinnerungen an diesem lokalen Datum.
-- Optionale Home Assistant Companion-App-Benachrichtigung an ein konfiguriertes `notify.*`-Ziel.
-- Eigene Lovelace-Karte mit den Buttons „Später“ und „Erledigt“.
-- HACS-Download und manuelle Installation.
+- „Erledigt“ unterdrückt weitere Erinnerungen an diesem Tag (übersteht Neustarts).
+- Optionale Companion-App-Benachrichtigung an ein `notify.*`-Ziel.
+- Eigene Lovelace-Karte, die automatisch geladen wird; Beispiele für Bubble Card.
 
 ## Installation über HACS (als benutzerdefiniertes Repository)
 
-1. Lade dieses Repository in ein eigenes GitHub-Repository hoch.
-2. In HACS → Integrationen → ⋮ → **Benutzerdefinierte Repositories** das Repository als **Integration** hinzufügen.
-3. Installation starten und Home Assistant neu starten.
-4. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Müll-Erinnerung**.
-5. Die Müllarten als YAML-Liste angeben (`label`, `entity_id`, optional `attribute` und `value`). Später änderbar über **Konfigurieren**.
-6. Karte ins Dashboard einfügen (siehe unten).
+1. In HACS → ⋮ → **Benutzerdefinierte Repositories** dieses Repository als **Integration** hinzufügen.
+2. Installieren und Home Assistant neu starten.
+3. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Müll-Erinnerung**.
+4. Abfallkalender auswählen. Optional die Standard-Mülltypen (Biomüll, Restmüll, Papiermüll, Gelber Sack) anlegen lassen.
+5. Karten ins Dashboard einfügen (siehe unten).
 
-### Dashboard-Karten
+## Mülltypen
 
-Die Integration liefert ihre eigene Karte `custom:muell-erinnerung-card` selbst aus und lädt sie automatisch im Frontend. Du musst also **keine Ressource** manuell hinzufügen. Die Karte erscheint in der Kartenauswahl als „Müll-Erinnerung“. Nach einem Update ggf. den Browser-Cache leeren.
+Unter Einstellungen → Geräte & Dienste → Müll-Erinnerung gibt es den Button **Mülltyp hinzufügen**. Jeder Mülltyp hat:
+
+- **Name**, z. B. `Biomüll`. Daraus entsteht die Entity-ID `sensor.muellerinnerung_biomuell` (Umlaute werden zu ae/oe/ue).
+- **Suchmuster**: regulärer Ausdruck, der im Termintitel gesucht wird, ohne Groß-/Kleinschreibung. Alternativen mit `|` trennen, z. B. `restmüll|restmuell|restabfall`. Im Dialog werden die im Kalender gefundenen Termintitel als Hilfe angezeigt.
+- **Icon** (optional).
+
+Bestehende Mülltypen lassen sich über das Stift-Symbol bearbeiten oder löschen; die Integration lädt danach automatisch neu.
+
+Standard-Mülltypen:
+
+| Name | Suchmuster |
+|---|---|
+| Biomüll | `bio` |
+| Restmüll | `restmüll\|restmuell\|restabfall` |
+| Papiermüll | `altpapier` |
+| Gelber Sack | `gelb` |
+
+## Entitäten
+
+Alle Entitäten gehören zum Gerät „Müllerinnerung“:
+
+| Entität | Beschreibung |
+|---|---|
+| `sensor.muellerinnerung_<mülltyp>` | Tage bis zur nächsten Abholung. Attribute: `anzahl_tage`, `anzeige` („Heute“, „Morgen“, „In 5 Tagen“, „unbekannt“), `date` (YYYY-MM-DD). |
+| `sensor.muellerinnerung_naechste_abholung` | Müllarten, die morgen abgeholt werden. Attribute: `muellarten`, `popup_aktiv`, `erledigt_am`, `schlummer_bis`. |
+| `binary_sensor.muellerinnerung_aktiv` | `on`, sobald die Erinnerungszeit erreicht ist, morgen etwas abgeholt wird und weder geschlummert noch erledigt wurde. Trigger für das Pop-up. |
+| `button.muellerinnerung_spaeter` | Schlummern. |
+| `button.muellerinnerung_erledigt` | Erledigt. |
+| `button.muellerinnerung_testbenachrichtigung` | Testbenachrichtigung senden. |
+
+Der Kalender wird beim Start, stündlich und kurz nach Mitternacht neu gelesen.
+
+## Dashboard-Karten
 
 Beispiele im Ordner [`examples/`](examples/):
-- [`lovelace-card.yaml`](examples/lovelace-card.yaml): eigene Karte der Integration.
-- [`bubble-card-popup.yaml`](examples/bubble-card-popup.yaml): Bubble Card Pop-up, das sich automatisch öffnet und nach „Später“/„Erledigt“ wieder schließt (benötigt [Bubble Card](https://github.com/Clooos/Bubble-Card) ≥ 3.0).
+- [`bubble-card-uebersicht.yaml`](examples/bubble-card-uebersicht.yaml): Bubble-Card-Buttons je Mülltyp mit Anzeigetext.
+- [`bubble-card-popup.yaml`](examples/bubble-card-popup.yaml): Bubble-Card-Pop-up, das sich automatisch öffnet und nach „Später“/„Erledigt“ wieder schließt (benötigt [Bubble Card](https://github.com/Clooos/Bubble-Card) ≥ 3.0).
+- [`lovelace-card.yaml`](examples/lovelace-card.yaml): eigene Karte der Integration (`custom:muell-erinnerung-card`). Sie wird automatisch geladen, eine Ressource ist nicht nötig, und sie erscheint in der Kartenauswahl als „Müll-Erinnerung“.
 
-Der Ordner `examples/` wird von HACS **nicht** nach Home Assistant kopiert (HACS installiert nur `custom_components/muell_erinnerung`). Den YAML-Inhalt kopierst du von GitHub und fügst ihn unter Dashboard bearbeiten → Karte hinzufügen → **Manuell** ein.
+Der Ordner `examples/` wird von HACS **nicht** nach Home Assistant kopiert. Den YAML-Inhalt von GitHub kopieren und unter Dashboard bearbeiten → Karte hinzufügen → **Manuell** einfügen.
+
+## Umstieg von Template-Sensoren
+
+Wer die Sensoren bisher per `template:` mit `calendar.get_events` und einem Jinja-Makro berechnet hat, kann diesen Block aus der `configuration.yaml` und das Makro aus `custom_templates/` entfernen. Die Attribute `anzahl_tage`, `anzeige` und `date` heißen gleich, die Entity-IDs ändern sich aber (z. B. `sensor.nachster_biomull` → `sensor.muellerinnerung_biomuell`). Dashboards und Automationen entsprechend anpassen. Unterschied: Wird kein Termin gefunden, ist der Zustand `unknown` statt `-1`.
 
 ## Companion-App-Benachrichtigungen
 
-In der Integration optional ein `notify`-Ziel auswählen/eintragen, z. B. `notify.mobile_app_dein_iphone`. Der Name hängt von deiner Home Assistant Companion App ab. Lege die Aktion in der App einmalig an, damit die `notify.mobile_app_*`-Entität existiert.
-
-Die Benachrichtigung enthält Müllarten und eine Aktions-URL zum Dashboard. Die interaktiven Buttons der persistenten Lovelace-Karte sind die primäre Bedienoberfläche. Mobile-Aktionsbuttons werden in diesem ersten Stand nicht als bidirektionale Aktionen ausgewertet; nutze für „Später“/„Erledigt“ die Karte.
-
-## Konfiguration und Bedienung
-
-Die Integration legt ein Gerät „Müllerinnerung“ mit folgenden Entitäten an:
-- `sensor.muellerinnerung_naechste_abholung`: Müllarten, die morgen abgeholt werden (Attribute: `muellarten`, `popup_aktiv`, `erledigt_am`, `schlummer_bis`).
-- `binary_sensor.muellerinnerung_aktiv`: `on`, sobald die Erinnerungszeit erreicht ist, morgen etwas abgeholt wird und weder geschlummert noch erledigt wurde. Dient als Trigger für das Pop-up.
-- `button.muellerinnerung_spaeter`: Schlummern.
-- `button.muellerinnerung_erledigt`: Erledigt.
-- `button.muellerinnerung_testbenachrichtigung`: Testbenachrichtigung.
-
-Bei einem Update von 0.1.x werden bestehende Entitäten (z. B. `binary_sensor.erinnerung_aktiv`) automatisch auf die neuen IDs umbenannt. Automationen und Karten, die noch die alten IDs verwenden, musst du anpassen.
-
-## Sensorformat
-
-Standardmäßig wird das Attribut `anzahl_tage` ausgewertet. Beispiel:
-```yaml
-sensor.nachster_papier:
-  anzahl_tage: 1
-```
-Soll stattdessen der Zustand der Entität verglichen werden, `attribute` leer lassen oder auf `state` setzen. Jeder Eintrag hat eine frei definierbare Bezeichnung und kann ein eigenes Attribut und einen eigenen Vergleichswert verwenden.
+In den Optionen der Integration ein `notify`-Ziel eintragen, z. B. `notify.mobile_app_dein_iphone`. Die Benachrichtigung enthält die Müllarten und einen Link zum konfigurierten Dashboard-Pfad. „Später“ und „Erledigt“ bedienst du über das Pop-up bzw. die Karte.
 
 ## Entwicklung
 
-Python-Code ist für moderne Home Assistant-Versionen geschrieben. Für Änderungen lokal testen und `manifest.json`-Version erhöhen. Pull Requests sind willkommen.
+```bash
+python3.13 -m venv .venv && .venv/bin/pip install -r requirements_test.txt
+.venv/bin/pytest
+```
 
 ## Lizenz
 

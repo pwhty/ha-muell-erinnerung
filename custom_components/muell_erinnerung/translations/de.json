@@ -3,22 +3,27 @@
     "step": {
       "user": {
         "title": "Müll-Erinnerung",
-        "description": "Müllarten als YAML-Liste angeben. Jeder Eintrag: label, entity_id, optional attribute (Standard anzahl_tage; leer oder \"state\" = Zustand der Entität) und value (Standard 1).",
+        "description": "Kalender mit den Abholterminen auswählen. Mülltypen kannst du danach unter der Integration hinzufügen und ändern.",
         "data": {
-          "items": "Müllarten",
+          "calendar_entity": "Abfallkalender",
+          "lookahead_days": "Vorschauzeitraum",
           "reminder_time": "Erinnerungszeit",
           "snooze_minutes": "Schlummerdauer",
           "notify_service": "Notify-Ziel (optional, z. B. notify.mobile_app_iphone)",
-          "dashboard_url": "Dashboard-Pfad für die Benachrichtigung"
+          "dashboard_url": "Dashboard-Pfad für die Benachrichtigung",
+          "create_default_types": "Standard-Mülltypen anlegen (Biomüll, Restmüll, Papiermüll, Gelber Sack)"
+        },
+        "data_description": {
+          "lookahead_days": "Wie viele Tage im Voraus Termine aus dem Kalender gelesen werden.",
+          "reminder_time": "Ab dieser Uhrzeit erscheint die Erinnerung am Vortag der Abholung.",
+          "snooze_minutes": "Nach „Später“ erscheint die Erinnerung nach dieser Zeit erneut."
         }
       }
     },
     "error": {
-      "invalid_items": "Ungültige Liste. Jeder Eintrag braucht mindestens label und eine gültige entity_id.",
-      "invalid_notify": "Das Notify-Ziel muss mit \"notify.\" beginnen."
+      "invalid_notify": "Das Notify-Ziel muss mit „notify.“ beginnen."
     },
     "abort": {
-      "already_configured": "Müll-Erinnerung ist bereits eingerichtet.",
       "single_instance_allowed": "Müll-Erinnerung ist bereits eingerichtet."
     }
   },
@@ -27,17 +32,64 @@
       "init": {
         "title": "Müll-Erinnerung konfigurieren",
         "data": {
-          "items": "Müllarten",
+          "calendar_entity": "Abfallkalender",
+          "lookahead_days": "Vorschauzeitraum",
           "reminder_time": "Erinnerungszeit",
           "snooze_minutes": "Schlummerdauer",
-          "notify_service": "Notify-Ziel (optional)",
+          "notify_service": "Notify-Ziel (optional, z. B. notify.mobile_app_iphone)",
           "dashboard_url": "Dashboard-Pfad für die Benachrichtigung"
+        },
+        "data_description": {
+          "lookahead_days": "Wie viele Tage im Voraus Termine aus dem Kalender gelesen werden.",
+          "reminder_time": "Ab dieser Uhrzeit erscheint die Erinnerung am Vortag der Abholung.",
+          "snooze_minutes": "Nach „Später“ erscheint die Erinnerung nach dieser Zeit erneut."
         }
       }
     },
     "error": {
-      "invalid_items": "Ungültige Liste. Jeder Eintrag braucht mindestens label und eine gültige entity_id.",
-      "invalid_notify": "Das Notify-Ziel muss mit \"notify.\" beginnen."
+      "invalid_notify": "Das Notify-Ziel muss mit „notify.“ beginnen."
+    }
+  },
+  "config_subentries": {
+    "waste_type": {
+      "entry_type": "Mülltyp",
+      "initiate_flow": {
+        "user": "Mülltyp hinzufügen"
+      },
+      "step": {
+        "user": {
+          "title": "Mülltyp hinzufügen",
+          "description": "Termine im Kalender: {termine}",
+          "data": {
+            "name": "Name",
+            "pattern": "Suchmuster im Termintitel",
+            "icon": "Icon"
+          },
+          "data_description": {
+            "name": "Wird als Sensorname verwendet, z. B. Biomüll → sensor.muellerinnerung_biomuell.",
+            "pattern": "Regulärer Ausdruck, Groß-/Kleinschreibung egal. Mehrere Begriffe mit | trennen, z. B. restmüll|restabfall."
+          }
+        },
+        "reconfigure": {
+          "title": "Mülltyp bearbeiten",
+          "description": "Termine im Kalender: {termine}",
+          "data": {
+            "name": "Name",
+            "pattern": "Suchmuster im Termintitel",
+            "icon": "Icon"
+          },
+          "data_description": {
+            "name": "Wird als Sensorname verwendet, z. B. Biomüll → sensor.muellerinnerung_biomuell.",
+            "pattern": "Regulärer Ausdruck, Groß-/Kleinschreibung egal. Mehrere Begriffe mit | trennen, z. B. restmüll|restabfall."
+          }
+        }
+      },
+      "error": {
+        "invalid_pattern": "Ungültiger regulärer Ausdruck."
+      },
+      "abort": {
+        "reconfigure_successful": "Mülltyp gespeichert."
+      }
     }
   }
 }
