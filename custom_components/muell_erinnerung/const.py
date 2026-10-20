@@ -1,0 +1,13 @@
+DOMAIN = "muell_erinnerung"
+PLATFORMS = ["sensor", "binary_sensor", "button"]
+CONF_ITEMS = "items"
+CONF_TIME = "reminder_time"
+CONF_SNOOZE = "snooze_minutes"
+CONF_NOTIFY = "notify_service"
+CONF_DASHBOARD_URL = "dashboard_url"
+DEFAULT_TIME = "19:00:00"
+DEFAULT_SNOOZE = 15
+DEFAULT_ATTR = "anzahl_tage"
+DEFAULT_VALUE = "1"
+STORAGE_VERSION = 1
+STORAGE_KEY = f"{DOMAIN}_state"

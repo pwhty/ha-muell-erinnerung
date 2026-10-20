@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Müll-Erinnerung",
+        "description": "Konfiguriere beliebig viele Müllarten. Jeder Eintrag benötigt Bezeichnung und Sensor-Entity-ID.",
+        "data": {
+          "items": "Müllarten (Liste)",
+          "reminder_time": "Erinnerungszeit (HH:MM:SS)",
+          "snooze_minutes": "Schlummerdauer in Minuten",
+          "notify_service": "Notify-Ziel (optional, z. B. notify.mobile_app_iphone)",
+          "dashboard_url": "Dashboard-Pfad"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Müll-Erinnerung konfigurieren",
+        "data": {
+          "items": "Müllarten (Liste)",
+          "reminder_time": "Erinnerungszeit (HH:MM:SS)",
+          "snooze_minutes": "Schlummerdauer in Minuten",
+          "notify_service": "Notify-Ziel (optional)",
+          "dashboard_url": "Dashboard-Pfad"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+type: custom:muell-erinnerung-card
+entity: binary_sensor.muell_erinnerung_erinnerung_aktiv
+sensor: sensor.muell_erinnerung_naechste_abholung
+show_when_inactive: true
