@@ -3,11 +3,12 @@
   "name": "Müll-Erinnerung",
   "codeowners": [],
   "config_flow": true,
+  "dependencies": ["http", "frontend"],
   "documentation": "https://github.com/DEIN-BENUTZER/muell-erinnerung",
-  "iot_class": "local_polling",
+  "integration_type": "service",
+  "iot_class": "calculated",
   "issue_tracker": "https://github.com/DEIN-BENUTZER/muell-erinnerung/issues",
   "requirements": [],
-  "version": "0.1.0",
-  "dependencies": [],
-  "integration_type": "service"
+  "single_config_entry": true,
+  "version": "0.2.0"
 }

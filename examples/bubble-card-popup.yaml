@@ -1,0 +1,91 @@
+# Bubble Card Pop-up für die Müll-Erinnerung (benötigt Bubble Card ≥ 3.0 via HACS).
+#
+# Öffnet sich automatisch, sobald binary_sensor.muellerinnerung_aktiv auf "on"
+# geht (Erinnerungszeit erreicht, Abholung morgen, weder geschlummert noch erledigt),
+# und schließt sich wieder, sobald "Später" oder "Erledigt" gedrückt wurde.
+#
+# Einfügen: Dashboard bearbeiten → Karte hinzufügen → Manuell → diesen Inhalt einfügen.
+# Am besten in einer eigenen Sektion/Ansicht ganz oben ablegen; das Pop-up ist
+# im normalen Dashboard unsichtbar, bis es ausgelöst wird.
+type: custom:bubble-card
+card_type: pop-up
+hash: '#muellabholung'
+name: Müllabholung
+icon: mdi:trash-can
+show_header: true
+show_icon: true
+show_name: true
+button_type: name
+bg_color: '#3f51b5'
+bg_opacity: '50'
+popup_mode: fit-content
+scrolling_effect: true
+show_close_button: false
+show_previous_button: false
+with_bottom_offset: false
+close_by_clicking_outside: false
+slide_to_close: false
+trigger:
+  - condition: state
+    entity_id: binary_sensor.muellerinnerung_aktiv
+    state:
+      - 'on'
+trigger_close: true
+cards:
+  - type: markdown
+    content: >
+      {% set arten = state_attr('sensor.muellerinnerung_naechste_abholung',
+      'muellarten') or [] %}
+      **Morgen werden abgeholt:** {{ arten | join(', ') if arten else 'nichts' }}
+  - type: horizontal-stack
+    cards:
+      - type: custom:bubble-card
+        card_type: button
+        button_type: name
+        name: Später
+        icon: mdi:clock-outline
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.muellerinnerung_spaeter
+        button_action:
+          tap_action:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.muellerinnerung_spaeter
+      - type: custom:bubble-card
+        card_type: button
+        button_type: name
+        name: Erledigt
+        icon: mdi:check
+        tap_action:
+          action: perform-action
+          perform_action: button.press
+          target:
+            entity_id: button.muellerinnerung_erledigt
+        button_action:
+          tap_action:
+            action: perform-action
+            perform_action: button.press
+            target:
+              entity_id: button.muellerinnerung_erledigt
+        styles: |
+          .bubble-button-card-container {
+            background-color: #b8e6c4 !important;
+          }
+          .bubble-icon-container {
+            background-color: white !important;
+          }
+          .bubble-button-card-container * {
+            color: #1f4d2e !important;
+          }
+          @media (prefers-color-scheme: dark) {
+            .bubble-button-card-container {
+              background-color: #2f5d3f !important;
+            }
+            .bubble-button-card-container * {
+              color: #d6f5de !important;
+            }
+          }

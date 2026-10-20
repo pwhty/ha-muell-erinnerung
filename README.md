@@ -2,7 +2,7 @@
 
 Eine HACS-kompatible Custom Integration für Müllabholungs-Erinnerungen mit konfigurierbaren Sensoren, einer Lovelace-Karte, Schlummern, Erledigt-Datum und optionalen Companion-App-Benachrichtigungen.
 
-> **Status:** erster funktionsfähiger Projektstand zur Erprobung. Vor produktivem Einsatz auf einer Testinstanz prüfen. Die Integration und die Lovelace-Karte sind in diesem Repository enthalten; Bubble Card ist nicht erforderlich.
+> **Status:** erster funktionsfähiger Projektstand zur Erprobung. Vor produktivem Einsatz auf einer Testinstanz prüfen. Die Integration und eine eigene Lovelace-Karte sind enthalten; alternativ gibt es ein Bubble-Card-Pop-up als Beispiel.
 
 ## Funktionen
 
@@ -21,19 +21,18 @@ Eine HACS-kompatible Custom Integration für Müllabholungs-Erinnerungen mit kon
 2. In HACS → Integrationen → ⋮ → **Benutzerdefinierte Repositories** das Repository als **Integration** hinzufügen.
 3. Installation starten und Home Assistant neu starten.
 4. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Müll-Erinnerung**.
-5. Den Sensoren Namen, Entity-ID, Attribut und den Zielwert zuweisen. Mehrere Müllarten können hinzugefügt werden.
-6. Dashboard-Ressource einbinden (siehe unten).
+5. Die Müllarten als YAML-Liste angeben (`label`, `entity_id`, optional `attribute` und `value`). Später änderbar über **Konfigurieren**.
+6. Karte ins Dashboard einfügen (siehe unten).
 
-### Dashboard-Ressource
+### Dashboard-Karten
 
-Nach der Installation liegt die JS-Datei unter:
-`/hacsfiles/muell-erinnerung/muell-erinnerung.js`
+Die Integration liefert ihre eigene Karte `custom:muell-erinnerung-card` selbst aus und lädt sie automatisch im Frontend. Du musst also **keine Ressource** manuell hinzufügen. Die Karte erscheint in der Kartenauswahl als „Müll-Erinnerung“. Nach einem Update ggf. den Browser-Cache leeren.
 
-Dashboard → Einstellungen → Dashboards → Ressourcen → Ressource hinzufügen:
-- URL: `/hacsfiles/muell-erinnerung/muell-erinnerung.js`
-- Typ: JavaScript-Modul
+Beispiele im Ordner [`examples/`](examples/):
+- [`lovelace-card.yaml`](examples/lovelace-card.yaml): eigene Karte der Integration.
+- [`bubble-card-popup.yaml`](examples/bubble-card-popup.yaml): Bubble Card Pop-up, das sich automatisch öffnet und nach „Später“/„Erledigt“ wieder schließt (benötigt [Bubble Card](https://github.com/Clooos/Bubble-Card) ≥ 3.0).
 
-Danach im Dashboard eine manuelle Karte aus `examples/lovelace-card.yaml` hinzufügen. Nach Änderungen an der JS-Datei ggf. Browser-Cache neu laden.
+Der Ordner `examples/` wird von HACS **nicht** nach Home Assistant kopiert (HACS installiert nur `custom_components/muell_erinnerung`). Den YAML-Inhalt kopierst du von GitHub und fügst ihn unter Dashboard bearbeiten → Karte hinzufügen → **Manuell** ein.
 
 ## Companion-App-Benachrichtigungen
 
@@ -43,14 +42,14 @@ Die Benachrichtigung enthält Müllarten und eine Aktions-URL zum Dashboard. Die
 
 ## Konfiguration und Bedienung
 
-Die Integration legt folgende Entitäten an:
-- `sensor.muell_erinnerung_naechste_abholung` – Liste der Müllarten, die morgen raus müssen.
-- `binary_sensor.muell_erinnerung_aktiv` – Erinnerung ist relevant und noch nicht erledigt.
-- `button.muell_erinnerung_spaeter` – Schlummern.
-- `button.muell_erinnerung_erledigt` – Erledigt.
-- `button.muell_erinnerung_testbenachrichtigung` – Testbenachrichtigung.
+Die Integration legt ein Gerät „Müllerinnerung“ mit folgenden Entitäten an:
+- `sensor.muellerinnerung_naechste_abholung`: Müllarten, die morgen abgeholt werden (Attribute: `muellarten`, `popup_aktiv`, `erledigt_am`, `schlummer_bis`).
+- `binary_sensor.muellerinnerung_aktiv`: `on`, sobald die Erinnerungszeit erreicht ist, morgen etwas abgeholt wird und weder geschlummert noch erledigt wurde. Dient als Trigger für das Pop-up.
+- `button.muellerinnerung_spaeter`: Schlummern.
+- `button.muellerinnerung_erledigt`: Erledigt.
+- `button.muellerinnerung_testbenachrichtigung`: Testbenachrichtigung.
 
-Die tatsächlichen Entity-IDs können bei Namenskonflikten von Home Assistant angepasst werden.
+Bei einem Update von 0.1.x werden bestehende Entitäten (z. B. `binary_sensor.erinnerung_aktiv`) automatisch auf die neuen IDs umbenannt. Automationen und Karten, die noch die alten IDs verwenden, musst du anpassen.
 
 ## Sensorformat
 
@@ -59,7 +58,7 @@ Standardmäßig wird das Attribut `anzahl_tage` ausgewertet. Beispiel:
 sensor.nachster_papier:
   anzahl_tage: 1
 ```
-Die Zustände selbst werden nicht verwendet. Jeder Eintrag hat eine frei definierbare Bezeichnung und kann ein eigenes Attribut und einen eigenen Vergleichswert verwenden.
+Soll stattdessen der Zustand der Entität verglichen werden, `attribute` leer lassen oder auf `state` setzen. Jeder Eintrag hat eine frei definierbare Bezeichnung und kann ein eigenes Attribut und einen eigenen Vergleichswert verwenden.
 
 ## Entwicklung
 

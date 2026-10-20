@@ -1,45 +1,31 @@
 """Button platform."""
 from homeassistant.components.button import ButtonEntity
+
+from . import async_mark_done, async_snooze, get_due_items, send_notification
 from .const import DOMAIN
-from . import async_snooze, async_mark_done
+from .entity import MuellEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     runtime = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([
-        MuellButton(hass, runtime, "spaeter", "Später", "mdi:clock-outline"),
-        MuellButton(hass, runtime, "erledigt", "Erledigt", "mdi:check-circle"),
-        TestNotificationButton(hass, runtime),
+        MuellButton(entry, runtime, "spaeter", "Später", "mdi:clock-outline"),
+        MuellButton(entry, runtime, "erledigt", "Erledigt", "mdi:check-circle"),
+        MuellButton(entry, runtime, "testbenachrichtigung", "Testbenachrichtigung", "mdi:message-badge"),
     ])
 
 
-class MuellButton(ButtonEntity):
-    _attr_has_entity_name = True
-
-    def __init__(self, hass, runtime, key, name, icon):
-        self.hass = hass
-        self.runtime = runtime
+class MuellButton(MuellEntity, ButtonEntity):
+    def __init__(self, entry, runtime, key, name, icon):
+        super().__init__(entry, runtime, "button", key)
         self._key = key
         self._attr_name = name
         self._attr_icon = icon
-        self._attr_unique_id = f"{DOMAIN}_{key}"
 
     async def async_press(self):
         if self._key == "spaeter":
             await async_snooze(self.hass, self.runtime)
-        else:
+        elif self._key == "erledigt":
             await async_mark_done(self.hass, self.runtime)
-
-
-class TestNotificationButton(ButtonEntity):
-    _attr_has_entity_name = True
-    _attr_name = "Testbenachrichtigung"
-    _attr_icon = "mdi:message-badge"
-
-    def __init__(self, hass, runtime):
-        self.hass = hass
-        self.runtime = runtime
-        self._attr_unique_id = f"{DOMAIN}_testbenachrichtigung"
-
-    async def async_press(self):
-        await self.runtime["notify"]()
+        else:
+            await send_notification(self.hass, self.runtime, get_due_items(self.hass, self.runtime))

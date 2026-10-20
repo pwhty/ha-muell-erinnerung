@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Waste reminder",
+        "description": "Waste types as a YAML list. Each entry: label, entity_id, optional attribute (default anzahl_tage; empty or \"state\" = entity state) and value (default 1).",
+        "data": {
+          "items": "Waste types",
+          "reminder_time": "Reminder time",
+          "snooze_minutes": "Snooze duration",
+          "notify_service": "Notify target (optional, e.g. notify.mobile_app_iphone)",
+          "dashboard_url": "Dashboard path for the notification"
+        }
+      }
+    },
+    "error": {
+      "invalid_items": "Invalid list. Each entry needs at least a label and a valid entity_id.",
+      "invalid_notify": "The notify target must start with \"notify.\"."
+    },
+    "abort": {
+      "already_configured": "Already configured.",
+      "single_instance_allowed": "Already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure waste reminder",
+        "data": {
+          "items": "Waste types",
+          "reminder_time": "Reminder time",
+          "snooze_minutes": "Snooze duration",
+          "notify_service": "Notify target (optional, e.g. notify.mobile_app_iphone)",
+          "dashboard_url": "Dashboard path for the notification"
+        }
+      }
+    },
+    "error": {
+      "invalid_items": "Invalid list. Each entry needs at least a label and a valid entity_id.",
+      "invalid_notify": "The notify target must start with \"notify.\"."
+    }
+  }
+}

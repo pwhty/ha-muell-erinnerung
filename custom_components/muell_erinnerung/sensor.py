@@ -1,24 +1,21 @@
 """Sensor platform."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.core import callback
 
 from .const import DOMAIN
+from .entity import MuellEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     runtime = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MuellDueSensor(runtime)])
+    async_add_entities([MuellDueSensor(entry, runtime)])
 
 
-class MuellDueSensor(SensorEntity):
-    _attr_has_entity_name = True
+class MuellDueSensor(MuellEntity, SensorEntity):
     _attr_name = "Nächste Abholung"
     _attr_icon = "mdi:trash-can"
 
-    def __init__(self, runtime):
-        self.runtime = runtime
-        self._attr_unique_id = f"{DOMAIN}_naechste_abholung"
+    def __init__(self, entry, runtime):
+        super().__init__(entry, runtime, "sensor", "naechste_abholung")
 
     @property
     def native_value(self):
@@ -26,9 +23,10 @@ class MuellDueSensor(SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        snooze_until = self.runtime.get("snooze_until")
         return {
             "muellarten": self.runtime.get("last_items", []),
             "popup_aktiv": self.runtime.get("is_open", False),
-            "erledigt_am": self.runtime.get("dismissed_today", ""),
-            "schlummer_bis": self.runtime.get("snooze_until").isoformat() if self.runtime.get("snooze_until") else None,
+            "erledigt_am": self.runtime.get("dismissed_date", ""),
+            "schlummer_bis": snooze_until.isoformat() if snooze_until else None,
         }

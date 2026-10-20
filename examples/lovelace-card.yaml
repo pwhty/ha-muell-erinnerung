@@ -1,4 +1,5 @@
+# Eigene Karte der Integration (wird automatisch geladen, keine Ressource nötig).
 type: custom:muell-erinnerung-card
-entity: binary_sensor.muell_erinnerung_erinnerung_aktiv
-sensor: sensor.muell_erinnerung_naechste_abholung
+entity: binary_sensor.muellerinnerung_aktiv
+sensor: sensor.muellerinnerung_naechste_abholung
 show_when_inactive: true
