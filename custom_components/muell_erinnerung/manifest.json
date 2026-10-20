@@ -8,10 +8,10 @@
     "frontend",
     "http"
   ],
-  "documentation": "https://github.com/DEIN-BENUTZER/muell-erinnerung",
+  "documentation": "https://github.com/pwhty/ha-muell-erinnerung",
   "integration_type": "service",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/DEIN-BENUTZER/muell-erinnerung/issues",
+  "issue_tracker": "https://github.com/pwhty/ha-muell-erinnerung/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "0.3.0"
