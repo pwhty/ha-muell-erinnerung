@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 DOMAIN = "muell_erinnerung"
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 PLATFORMS = ["sensor", "binary_sensor", "button"]
 
 CONF_CALENDAR = "calendar_entity"
@@ -36,5 +36,12 @@ STORAGE_KEY = f"{DOMAIN}_state"
 # Entity-IDs: <plattform>.muellerinnerung_<key>
 ENTITY_PREFIX = "muellerinnerung"
 DEVICE_NAME = "Müllerinnerung"
+MAIN_ENTITIES = [
+    ("sensor", "naechste_abholung"),
+    ("binary_sensor", "aktiv"),
+    ("button", "spaeter"),
+    ("button", "erledigt"),
+    ("button", "testbenachrichtigung"),
+]
 
 CARD_URL = f"/{DOMAIN}/muell-erinnerung.js"

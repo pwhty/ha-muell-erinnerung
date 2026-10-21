@@ -148,3 +148,28 @@ async def test_main_device_moved_back_from_subentry(hass, calendar, config_entry
     main = devices.async_get_device(identifiers={(DOMAIN, config_entry.entry_id)})
     assert main.id == old.id
     assert main.config_entries_subentries == {config_entry.entry_id: {None}}
+
+
+async def test_legacy_entity_ids_are_renamed(hass, calendar, config_entry, notify_calls):
+    """IDs aus 0.1.0 (bzw. von HA nach Neuanlage restauriert) werden umbenannt."""
+    config_entry.add_to_hass(hass)
+    assert config_entry.minor_version == 1
+    entities = er.async_get(hass)
+    legacy = {
+        "naechste_abholung": ("sensor", "nachste_abholung"),
+        "aktiv": ("binary_sensor", "erinnerung_aktiv"),
+        "spaeter": ("button", "muellerinnerung_spater"),
+    }
+    for key, (platform, object_id) in legacy.items():
+        entities.async_get_or_create(
+            platform, DOMAIN, f"{DOMAIN}_{key}", suggested_object_id=object_id, config_entry=config_entry
+        )
+    assert entities.async_get("sensor.nachste_abholung")
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.minor_version == 2
+    for entity_id in ("sensor.nachste_abholung", "binary_sensor.erinnerung_aktiv", "button.muellerinnerung_spater"):
+        assert entities.async_get(entity_id) is None
+    for entity_id in ("sensor.muellerinnerung_naechste_abholung", "binary_sensor.muellerinnerung_aktiv", "button.muellerinnerung_spaeter"):
+        assert hass.states.get(entity_id) is not None

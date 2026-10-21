@@ -84,6 +84,8 @@ def _validate_pattern(pattern: str) -> dict:
 
 class MuellErinnerungConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
+    # 1.2: Entity-IDs auf muellerinnerung_* vereinheitlicht (siehe async_migrate_entry).
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input=None):
         errors = {}

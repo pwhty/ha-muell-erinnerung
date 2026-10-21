@@ -6,10 +6,11 @@ from pathlib import Path
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import CARD_URL, DOMAIN, PLATFORMS, VERSION
+from .const import CARD_URL, DOMAIN, ENTITY_PREFIX, MAIN_ENTITIES, PLATFORMS, SUBENTRY_TYPE, VERSION
 from .coordinator import MuellConfigEntry, MuellCoordinator
+from .pickup import slugify_name
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -20,6 +21,33 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     )
     add_extra_js_url(hass, f"{CARD_URL}?v={VERSION}")
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: MuellConfigEntry) -> bool:
+    if entry.version > 1:
+        return False
+    if entry.minor_version < 2:
+        _async_rename_entities(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True
+
+
+@callback
+def _async_rename_entities(hass: HomeAssistant, entry: MuellConfigEntry) -> None:
+    """Entity-IDs auf <plattform>.muellerinnerung_<key> bringen.
+
+    Die unique_ids sind seit 0.1.0 gleich, daher behält bzw. restauriert HA alte
+    IDs wie sensor.nachste_abholung, auch nach Löschen und Neuanlegen.
+    """
+    expected = {f"{DOMAIN}_{key}": f"{platform}.{ENTITY_PREFIX}_{key}" for platform, key in MAIN_ENTITIES}
+    for subentry_id, subentry in entry.subentries.items():
+        if subentry.subentry_type == SUBENTRY_TYPE:
+            expected[f"{DOMAIN}_{subentry_id}"] = f"sensor.{ENTITY_PREFIX}_{slugify_name(subentry.title)}"
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        new_entity_id = expected.get(entity.unique_id)
+        if new_entity_id and entity.entity_id != new_entity_id and registry.async_get(new_entity_id) is None:
+            registry.async_update_entity(entity.entity_id, new_entity_id=new_entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MuellConfigEntry) -> bool:
